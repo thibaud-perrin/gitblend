@@ -6,8 +6,8 @@ import webbrowser
 
 import bpy
 
-from gitblend.bpy_adapters import context as ctx_adapter
-from gitblend.domain.result import is_ok
+from ..bpy_adapters import context as ctx_adapter
+from ..domain.result import is_ok
 
 from ._services import get_blender_project, get_git
 

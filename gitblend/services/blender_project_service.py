@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gitblend.domain.models import BlenderProjectInfo, RepoStatus
-from gitblend.infrastructure.file_system import FileSystem
+from ..domain.models import BlenderProjectInfo, RepoStatus
+from ..infrastructure.file_system import FileSystem
 
 # Treat any directory containing a .blend file as a potential project root.
 # Stop walking when a .git directory or filesystem root is reached.

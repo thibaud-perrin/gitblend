@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from gitblend.domain.errors import GitBlendError, GitCommandError
-from gitblend.domain.result import Result, err, ok
-from gitblend.infrastructure.file_system import FileSystem
-from gitblend.services.lfs_service import BLENDER_LFS_PATTERNS, LFSService
+from ..domain.errors import GitBlendError, GitCommandError
+from ..domain.result import Result, err, ok
+from ..infrastructure.file_system import FileSystem
+from ..services.lfs_service import BLENDER_LFS_PATTERNS, LFSService
 
 # GitHub's hard limit for individual files
 GITHUB_FILE_LIMIT_MB = 100.0

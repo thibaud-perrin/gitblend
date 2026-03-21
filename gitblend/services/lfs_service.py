@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gitblend.domain.errors import GitBlendError, GitCommandError, LFSNotAvailableError
-from gitblend.domain.models import GitFile
-from gitblend.domain.result import Result, err, ok
-from gitblend.infrastructure.file_system import FileSystem
-from gitblend.infrastructure.subprocess_runner import SubprocessRunner
+from ..domain.errors import GitBlendError, GitCommandError, LFSNotAvailableError
+from ..domain.models import GitFile
+from ..domain.result import Result, err, ok
+from ..infrastructure.file_system import FileSystem
+from ..infrastructure.subprocess_runner import SubprocessRunner
 
 # Default LFS patterns for Blender projects
 BLENDER_LFS_PATTERNS: list[str] = [
@@ -116,7 +116,7 @@ class LFSService:
 
         Returns GitFile objects for files exceeding threshold_mb.
         """
-        from gitblend.domain.enums import FileStatus
+        from ..domain.enums import FileStatus
         threshold_bytes = int(threshold_mb * 1024 * 1024)
         large_files: list[GitFile] = []
 

@@ -11,7 +11,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from gitblend.domain.errors import GitBinaryNotFoundError
+from ..domain.errors import GitBinaryNotFoundError
 
 
 @dataclass

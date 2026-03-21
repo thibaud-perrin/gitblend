@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from gitblend.domain.enums import BranchType
-from gitblend.domain.models import Branch, CommitInfo, GitRemote
+from ..domain.enums import BranchType
+from ..domain.models import Branch, CommitInfo, GitRemote
 
 # Separator used between commit records
 _COMMIT_SEP = "---GITBLEND-COMMIT---"

@@ -12,10 +12,10 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from gitblend.domain.errors import AuthError, GitBlendError, NetworkError
-from gitblend.domain.models import DeviceFlowData, GitHubRepo, PullRequest, Release
-from gitblend.domain.result import Result, err, ok
-from gitblend.infrastructure.auth_store import AuthStore
+from ..domain.errors import AuthError, GitBlendError, NetworkError
+from ..domain.models import DeviceFlowData, GitHubRepo, PullRequest, Release
+from ..domain.result import Result, err, ok
+from ..infrastructure.auth_store import AuthStore
 
 _API_BASE = "https://api.github.com"
 _GITHUB_HOST = "github.com"

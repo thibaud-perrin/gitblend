@@ -6,15 +6,15 @@ SubprocessRunner / FileSystem instances per-call.
 
 from __future__ import annotations
 
-from gitblend.infrastructure.auth_store import AuthStore
-from gitblend.infrastructure.file_system import FileSystem
-from gitblend.infrastructure.subprocess_runner import SubprocessRunner
-from gitblend.services.blender_project_service import BlenderProjectService
-from gitblend.services.diagnostics_service import DiagnosticsService
-from gitblend.services.git_service import GitService
-from gitblend.services.github_service import GitHubService
-from gitblend.services.lfs_service import LFSService
-from gitblend.services.snapshot_service import SnapshotService
+from ..infrastructure.auth_store import AuthStore
+from ..infrastructure.file_system import FileSystem
+from ..infrastructure.subprocess_runner import SubprocessRunner
+from ..services.blender_project_service import BlenderProjectService
+from ..services.diagnostics_service import DiagnosticsService
+from ..services.git_service import GitService
+from ..services.github_service import GitHubService
+from ..services.lfs_service import LFSService
+from ..services.snapshot_service import SnapshotService
 
 
 def _git_bin() -> str:

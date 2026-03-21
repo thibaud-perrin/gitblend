@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import bpy
 
-from gitblend.bpy_adapters import context as ctx_adapter
-from gitblend.bpy_adapters import reports
-from gitblend.domain.errors import NotBlenderProjectError
-from gitblend.domain.result import is_ok
+from ..bpy_adapters import context as ctx_adapter
+from ..bpy_adapters import reports
+from ..domain.errors import NotBlenderProjectError
+from ..domain.result import is_ok
 
 from ._services import get_blender_project, get_diagnostics
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gitblend.domain.enums import FileStatus
-from gitblend.domain.models import GitFile
+from ..domain.enums import FileStatus
+from ..domain.models import GitFile
 
 # XY code → (index_status, working_status)
 # X = index (staged), Y = working tree

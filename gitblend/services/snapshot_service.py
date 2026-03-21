@@ -8,9 +8,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from gitblend.domain.errors import GitBlendError, GitCommandError
-from gitblend.domain.result import Result, err, ok
-from gitblend.infrastructure.file_system import FileSystem
+from ..domain.errors import GitBlendError, GitCommandError
+from ..domain.result import Result, err, ok
+from ..infrastructure.file_system import FileSystem
 
 _BACKUP_DIR = ".gitblend-backups"
 

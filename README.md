@@ -64,26 +64,51 @@ gitblend has **zero runtime Python dependencies**. It uses only the standard lib
 
 ## Installation
 
-### Option A — Install from zip (recommended)
-
-1. Download the latest `gitblend-x.y.z.zip` from the [Releases](https://github.com/hallcyn/gitblend/releases) page.
-2. In Blender, open **Edit → Preferences → Add-ons**.
-3. Click **Install from Disk…** and select the downloaded zip.
-4. Enable the **gitblend** addon (Development category).
-5. The **Git** tab appears in the **3D View N-panel** (press `N` to open it).
-
-### Option B — Install from source
+### Option A — Build and install from source (recommended)
 
 ```bash
 git clone https://github.com/hallcyn/gitblend.git
 cd gitblend
+uv sync --dev
 
-# Optional: build the extension zip
-# (requires Blender CLI available in PATH)
-blender --command extension build --source-dir gitblend --output-dir .
+# Build the extension zip
+uv run python tools/package_extension.py
+# → dist/gitblend-0.1.0.zip
 ```
 
-Then install the generated zip using the steps above.
+1. In Blender, open **Edit → Preferences → Add-ons**.
+2. Click **Install from Disk…** and select `dist/gitblend-0.1.0.zip`.
+3. Enable the **gitblend** addon (Development category).
+4. The **Git** tab appears in the **3D View N-panel** (press `N` to open it).
+
+### Option B — Development install (live reload, no zip rebuild)
+
+```bash
+git clone https://github.com/hallcyn/gitblend.git
+cd gitblend
+uv sync --dev
+
+# Create a symlink from Blender's addons directory to the source
+uv run python tools/dev_install.py
+
+# To remove the symlink
+uv run python tools/dev_install.py --uninstall
+
+# If Blender is not in the default location
+uv run python tools/dev_install.py --blender /path/to/Blender.app
+```
+
+Enable the addon in **Edit → Preferences → Add-ons → gitblend**. After editing source files, use **Reload** in the addon preferences — no zip rebuild needed.
+
+### Blender version compatibility
+
+| Blender version | Status |
+|---|---|
+| 4.2 LTS | Supported |
+| 4.3 | Supported |
+| 4.4 | Supported |
+| 5.0 | Supported |
+| 5.1+ | Supported |
 
 ### Preferences
 

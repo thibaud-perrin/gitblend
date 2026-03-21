@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gitblend.domain.enums import SyncState
-from gitblend.domain.errors import (
+from ..domain.enums import SyncState
+from ..domain.errors import (
     BranchNotFoundError,
     GitBlendError,
     GitCommandError,
@@ -13,18 +13,18 @@ from gitblend.domain.errors import (
     RemoteNotFoundError,
     RepoNotInitializedError,
 )
-from gitblend.domain.models import Branch, CommitInfo, GitRemote, RepoStatus
-from gitblend.domain.result import Err, Result, err, ok
-from gitblend.infrastructure.file_system import FileSystem
-from gitblend.infrastructure.parser_git_log import (
+from ..domain.models import Branch, CommitInfo, GitRemote, RepoStatus
+from ..domain.result import Err, Result, err, ok
+from ..infrastructure.file_system import FileSystem
+from ..infrastructure.parser_git_log import (
     GIT_LOG_FORMAT,
     parse_ahead_behind,
     parse_branch_list,
     parse_log,
     parse_remote_list,
 )
-from gitblend.infrastructure.parser_git_status import parse_porcelain_v1, split_by_area
-from gitblend.infrastructure.subprocess_runner import SubprocessRunner
+from ..infrastructure.parser_git_status import parse_porcelain_v1, split_by_area
+from ..infrastructure.subprocess_runner import SubprocessRunner
 
 
 class GitService:
@@ -211,7 +211,7 @@ class GitService:
         result = self._runner.run_git(args, cwd=repo)
         if result.failed:
             return err(GitCommandError(result.command, result.returncode, result.stderr))
-        from gitblend.domain.enums import BranchType
+        from ..domain.enums import BranchType
         return ok(Branch(name=name, type=BranchType.LOCAL, is_current=False))
 
     def switch_branch(self, repo: Path, name: str) -> Result[None, GitBlendError]:
@@ -305,10 +305,10 @@ class GitService:
         result = self._runner.run_git(["fetch", remote], cwd=repo)
         if result.failed:
             if "Could not resolve host" in result.stderr or "Connection refused" in result.stderr:
-                from gitblend.domain.errors import NetworkError
+                from ..domain.errors import NetworkError
                 return err(NetworkError(result.stderr))
             if "Authentication" in result.stderr or "403" in result.stderr:
-                from gitblend.domain.errors import AuthError
+                from ..domain.errors import AuthError
                 return err(AuthError(result.stderr))
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)
@@ -327,7 +327,7 @@ class GitService:
             if "CONFLICT" in result.stdout:
                 return err(MergeConflictError())
             if "Could not resolve host" in result.stderr:
-                from gitblend.domain.errors import NetworkError
+                from ..domain.errors import NetworkError
                 return err(NetworkError(result.stderr))
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)
@@ -352,7 +352,7 @@ class GitService:
             if "rejected" in result.stderr:
                 return err(GitCommandError(result.command, result.returncode, result.stderr))
             if "Could not resolve host" in result.stderr:
-                from gitblend.domain.errors import NetworkError
+                from ..domain.errors import NetworkError
                 return err(NetworkError(result.stderr))
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)

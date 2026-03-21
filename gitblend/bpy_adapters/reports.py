@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import bpy
 
-from gitblend.domain.enums import ErrorKind
-from gitblend.domain.errors import GitBlendError
+from ..domain.enums import ErrorKind
+from ..domain.errors import GitBlendError
 
 
 def report_info(operator: bpy.types.Operator, message: str) -> None:
