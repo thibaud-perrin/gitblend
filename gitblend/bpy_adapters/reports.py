@@ -20,6 +20,8 @@ def report_error(operator: bpy.types.Operator, error: GitBlendError) -> None:
     """Report a GitBlendError to the Blender operator info area."""
     level = _error_kind_to_level(error.kind)
     operator.report({level}, error.message)
+    if error.detail:
+        operator.report({"WARNING"}, error.detail)
     if error.suggestion:
         operator.report({"INFO"}, f"Tip: {error.suggestion}")
 

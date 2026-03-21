@@ -7,11 +7,13 @@ import webbrowser
 import bpy
 
 from ..bpy_adapters import context as ctx_adapter
-from ..bpy_adapters import reports
+from ..bpy_adapters import jobs, reports
 from ..domain.errors import NotBlenderProjectError
 from ..domain.result import is_ok
 
 from ._services import get_blender_project, get_git, get_github
+
+_device_flow_pending: bool = False
 
 
 class GITBLEND_OT_auth_pat(bpy.types.Operator):
@@ -64,29 +66,60 @@ class GITBLEND_OT_start_device_flow(bpy.types.Operator):
     bl_label = "Connect via Browser"
     bl_description = "Authenticate with GitHub using the device authorization flow"
 
-    _user_code: str = ""
-    _verification_uri: str = ""
-    _device_code: str = ""
-
     def execute(self, context: bpy.types.Context) -> set[str]:
-        github = get_github()
-        result = github.start_device_flow()
-        if not is_ok(result):
-            reports.report_error(self, result.error)  # type: ignore[union-attr]
+        global _device_flow_pending
+        if _device_flow_pending:
+            self.report({"WARNING"}, "GitHub connection already in progress...")
             return {"CANCELLED"}
 
-        flow = result.value  # type: ignore[union-attr]
-        self._user_code = flow.user_code
-        self._verification_uri = flow.verification_uri
-        self._device_code = flow.device_code
+        _device_flow_pending = True
+        github = get_github()
 
-        # Open browser
-        webbrowser.open(flow.verification_uri)
+        def do_start():
+            return github.start_device_flow()
 
-        props = context.window_manager.gitblend  # type: ignore[attr-defined]
-        props.device_flow_code = flow.user_code
-        props.device_flow_uri = flow.verification_uri
+        def on_complete(result):
+            global _device_flow_pending
+            _device_flow_pending = False
+            if not is_ok(result):
+                error = result.error  # type: ignore[union-attr]
+                msg = error.message
+                if error.detail:
+                    msg = f"{msg}: {error.detail}"
+                reports.popup_message(msg, title="GitHub Connection Failed", icon="ERROR")
+                return
+            flow = result.value  # type: ignore[union-attr]
+            try:
+                props = bpy.context.window_manager.gitblend  # type: ignore[attr-defined]
+                props.device_flow_code = flow.user_code
+                props.device_flow_uri = flow.verification_uri
+                props.device_flow_device_code = flow.device_code
+            except Exception:
+                pass
+            webbrowser.open(flow.verification_uri)
+            bpy.ops.gitblend.show_device_flow_popup("INVOKE_DEFAULT")
 
+        def on_error(exc: Exception) -> None:
+            global _device_flow_pending
+            _device_flow_pending = False
+            reports.popup_message(str(exc), title="GitHub Connection Failed", icon="ERROR")
+
+        jobs.run_in_background(do_start, on_complete, on_error)
+        self.report({"INFO"}, "Connecting to GitHub...")
+        return {"FINISHED"}
+
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
+        return self.execute(context)
+
+
+class GITBLEND_OT_show_device_flow_popup(bpy.types.Operator):
+    bl_idname = "gitblend.show_device_flow_popup"
+    bl_label = "GitHub Device Authorization"
+
+    def execute(self, context: bpy.types.Context) -> set[str]:
+        return {"FINISHED"}
+
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
         return context.window_manager.invoke_popup(self, width=400)
 
     def draw(self, context: bpy.types.Context) -> None:
@@ -101,9 +134,6 @@ class GITBLEND_OT_start_device_flow(bpy.types.Operator):
         layout.label(text=props.device_flow_uri)
         layout.separator()
         layout.operator("gitblend.poll_device_flow", text="I've authorized — continue", icon="CHECKMARK")
-
-    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
-        return self.execute(context)
 
 
 class GITBLEND_OT_poll_device_flow(bpy.types.Operator):
@@ -372,6 +402,7 @@ def _parse_github_owner_repo(url: str) -> tuple[str, str]:
 classes = [
     GITBLEND_OT_auth_pat,
     GITBLEND_OT_start_device_flow,
+    GITBLEND_OT_show_device_flow_popup,
     GITBLEND_OT_poll_device_flow,
     GITBLEND_OT_github_logout,
     GITBLEND_OT_create_remote_repo,

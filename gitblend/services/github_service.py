@@ -7,10 +7,13 @@ are zero extra dependencies to bundle into the Blender extension.
 from __future__ import annotations
 
 import json
+import ssl
 import time
 import urllib.error
 import urllib.request
 from typing import Any
+
+_SSL_CONTEXT = ssl.create_default_context()
 
 from ..domain.errors import AuthError, GitBlendError, NetworkError
 from ..domain.models import DeviceFlowData, GitHubRepo, PullRequest, Release
@@ -21,8 +24,7 @@ _API_BASE = "https://api.github.com"
 _GITHUB_HOST = "github.com"
 
 # OAuth app client ID for device flow (public, non-secret)
-# Users of gitblend should register their own app or use a community one.
-_CLIENT_ID = "Ov23liXm2mOV7RdNaRmN"  # placeholder — replace with real client_id
+_CLIENT_ID = "Ov23lijVNY7BP9XRWwkC"
 
 
 class GitHubService:
@@ -70,12 +72,23 @@ class GitHubService:
                 },
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=15, context=_SSL_CONTEXT) as resp:
                 data = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return err(AuthError(
+                    "Device flow is not configured for this installation. "
+                    "Use 'Connect with Token' (PAT) instead."
+                ))
+            return err(NetworkError(f"HTTP {e.code}: {e.reason}"))
         except urllib.error.URLError as e:
             return err(NetworkError(str(e)))
         except Exception as e:
             return err(NetworkError(str(e)))
+
+        if "error" in data:
+            description = data.get("error_description") or data["error"]
+            return err(AuthError(f"GitHub: {description}"))
 
         return ok(DeviceFlowData(
             device_code=data["device_code"],
@@ -111,7 +124,7 @@ class GitHubService:
                     },
                     method="POST",
                 )
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=15, context=_SSL_CONTEXT) as resp:
                     data = json.loads(resp.read().decode())
             except urllib.error.URLError as e:
                 return err(NetworkError(str(e)))
@@ -279,7 +292,7 @@ class GitHubService:
 
         req = urllib.request.Request(url, data=body, headers=headers, method=method)
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            with urllib.request.urlopen(req, timeout=30, context=_SSL_CONTEXT) as resp:
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             body_text = e.read().decode() if e else ""
