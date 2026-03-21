@@ -9,7 +9,7 @@ to registration.py to keep this file minimal.
 bl_info = {
     "name": "gitblend",
     "author": "gitblend contributors",
-    "version": (0, 2, 1),
+    "version": (0, 2, 2),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Git",
     "description": "Git and GitHub workflows for Blender projects.",

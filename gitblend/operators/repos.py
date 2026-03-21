@@ -8,7 +8,7 @@ import bpy
 
 from ..bpy_adapters import jobs, reports
 
-from ._services import get_git, get_github
+from ._services import get_auth, get_git, get_github
 
 
 class GITBLEND_OT_refresh_blender_repos(bpy.types.Operator):
@@ -132,9 +132,10 @@ class GITBLEND_OT_clone_repo(bpy.types.Operator):
 
     def _do_clone(self, clone_url: str, target_path: Path) -> set[str]:
         git = get_git()
+        token = get_auth().load_token("github.com")
 
         def do_clone():
-            return git.clone(clone_url, target_path)
+            return git.clone(clone_url, target_path, token=token)
 
         def on_complete(result) -> None:
             from ..domain.result import is_ok

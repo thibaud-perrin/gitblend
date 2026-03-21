@@ -2,6 +2,8 @@
 
 **Version your Blender projects like code, without leaving Blender.**
 
+![gitblend benner](./banner.png)
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Blender](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://www.blender.org/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
@@ -15,6 +17,7 @@ It is designed for artists, tech artists, and small teams who work with `.blend`
 ## Features
 
 ### Core versioning
+
 - Initialise a git repo from the current project directory
 - See the working tree status at a glance (staged, modified, untracked, conflicts)
 - Auto-save the `.blend` before committing
@@ -26,6 +29,7 @@ It is designed for artists, tech artists, and small teams who work with `.blend`
 - Merge branches with conflict detection
 
 ### GitHub integration
+
 - Authenticate via Personal Access Token or browser device flow (no copy-paste required)
 - Create a GitHub repository directly from Blender
 - Push, pull, and fetch
@@ -34,6 +38,7 @@ It is designed for artists, tech artists, and small teams who work with `.blend`
 - Open the repo, commit, or PR in the browser with one click
 
 ### Project health
+
 - Audit the project for portability issues before committing
 - Detect files exceeding GitHub's 100 MB limit
 - Generate a Blender-appropriate `.gitignore`
@@ -41,6 +46,7 @@ It is designed for artists, tech artists, and small teams who work with `.blend`
 - Generate a `.gitattributes` file with LFS tracking rules
 
 ### Blender UX
+
 - Dedicated **Git** tab in the 3D View N-panel
 - Background fetch/push so Blender stays responsive
 - Automatic `.blend` backup before every restore or checkout operation
@@ -51,12 +57,12 @@ It is designed for artists, tech artists, and small teams who work with `.blend`
 
 ## Requirements
 
-| Requirement | Version |
-|---|---|
-| Blender | 4.2 or later |
-| git | Any recent version, installed on the system |
-| git-lfs | Optional — required for LFS features only |
-| Internet | Optional — required for GitHub features only |
+| Requirement | Version                                      |
+| ----------- | -------------------------------------------- |
+| Blender     | 4.2 or later                                 |
+| git         | Any recent version, installed on the system  |
+| git-lfs     | Optional — required for LFS features only    |
+| Internet    | Optional — required for GitHub features only |
 
 gitblend has **zero runtime Python dependencies**. It uses only the standard library, so there is nothing to bundle or install beyond git itself.
 
@@ -102,24 +108,24 @@ Enable the addon in **Edit → Preferences → Add-ons → gitblend**. After edi
 
 ### Blender version compatibility
 
-| Blender version | Status |
-|---|---|
-| 4.2 LTS | Supported |
-| 4.3 | Supported |
-| 4.4 | Supported |
-| 5.0 | Supported |
-| 5.1+ | Supported |
+| Blender version | Status    |
+| --------------- | --------- |
+| 4.2 LTS         | Supported |
+| 4.3             | Supported |
+| 4.4             | Supported |
+| 5.0             | Supported |
+| 5.1+            | Supported |
 
 ### Preferences
 
 Open **Edit → Preferences → Add-ons → gitblend** to configure:
 
-| Preference | Default | Description |
-|---|---|---|
-| **Git Binary** | *(system git)* | Override the path to the `git` executable |
-| **Enable LFS support** | On | Show LFS buttons and check for git-lfs |
-| **Auto-save before commit** | On | Save the `.blend` automatically before each commit |
-| **Backup before restore** | On | Create a `.blend` backup before any checkout or revert |
+| Preference                  | Default        | Description                                            |
+| --------------------------- | -------------- | ------------------------------------------------------ |
+| **Git Binary**              | _(system git)_ | Override the path to the `git` executable              |
+| **Enable LFS support**      | On             | Show LFS buttons and check for git-lfs                 |
+| **Auto-save before commit** | On             | Save the `.blend` automatically before each commit     |
+| **Backup before restore**   | On             | Create a `.blend` backup before any checkout or revert |
 
 Credentials (GitHub tokens) are stored in the system keychain — never in project files.
 
@@ -147,6 +153,7 @@ Git tab
 ### Browse history
 
 Open the **History** sub-panel to see all commits. Select a commit to:
+
 - **Checkout** — restore the project to that state (backs up current `.blend` first)
 - **Revert** — create a new commit that undoes it
 - **Open on GitHub** — jump to that commit in the browser

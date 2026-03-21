@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..domain.enums import SyncState
+from ..domain.enums import ErrorKind, SyncState
 from ..domain.errors import (
     BranchNotFoundError,
     GitBlendError,
@@ -47,10 +47,23 @@ class GitService:
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(path)
 
-    def clone(self, url: str, target_dir: Path) -> Result[Path, GitBlendError]:
-        result = self._runner.run_git(["clone", url, str(target_dir)])
+    def clone(self, url: str, target_dir: Path, token: str | None = None) -> Result[Path, GitBlendError]:
+        # Prevent git from hanging waiting for interactive credentials in a background thread
+        env = {"GIT_TERMINAL_PROMPT": "0"}
+
+        # Inject token into HTTPS URL so no credential helper is needed
+        auth_url = url
+        if token and url.startswith("https://github.com/"):
+            auth_url = url.replace("https://", f"https://oauth2:{token}@", 1)
+
+        result = self._runner.run_git(["clone", auth_url, str(target_dir)], env=env)
         if result.failed:
             return err(GitCommandError(result.command, result.returncode, result.stderr))
+
+        # Strip the token from the stored remote URL — never persist it in .git/config
+        if auth_url != url:
+            self._runner.run_git(["remote", "set-url", "origin", url], cwd=target_dir)
+
         return ok(target_dir)
 
     def is_repo(self, path: Path) -> bool:
@@ -152,7 +165,29 @@ class GitService:
     def commit(self, repo: Path, message: str) -> Result[CommitInfo, GitBlendError]:
         result = self._runner.run_git(["commit", "-m", message], cwd=repo)
         if result.failed:
-            return err(GitCommandError(result.command, result.returncode, result.stderr))
+            stderr = result.stderr.strip()
+            if "identity" in stderr or "ident name" in stderr or "Please tell me who you are" in stderr:
+                return err(GitBlendError(
+                    message="Git user identity is not configured.",
+                    kind=ErrorKind.CONFIG,
+                    detail=stderr,
+                    suggestion=(
+                        "Run in a terminal:\n"
+                        '  git config --global user.name "Your Name"\n'
+                        '  git config --global user.email "you@example.com"'
+                    ),
+                ))
+            if "cannot run gpg" in stderr or ("gpg" in stderr and "failed to sign" in stderr):
+                return err(GitBlendError(
+                    message="GPG commit signing is enabled but gpg is not available.",
+                    kind=ErrorKind.CONFIG,
+                    detail=stderr,
+                    suggestion=(
+                        "Either install GPG, or disable commit signing:\n"
+                        "  git config --global commit.gpgsign false"
+                    ),
+                ))
+            return err(GitCommandError(result.command, result.returncode, stderr))
         # Fetch the commit we just made
         log_result = self.log(repo, limit=1)
         if isinstance(log_result, Err):

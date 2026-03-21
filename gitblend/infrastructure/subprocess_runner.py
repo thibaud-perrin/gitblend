@@ -6,6 +6,7 @@ subprocess usage to one place and makes testing easy via dependency injection.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -63,6 +64,10 @@ class SubprocessRunner:
             env: Environment variables (merged with current env if None).
         """
         working_dir = cwd or self._cwd
+        full_env: dict[str, str] | None = None
+        if env is not None:
+            full_env = os.environ.copy()
+            full_env.update(env)
         try:
             proc = subprocess.run(
                 args,
@@ -70,7 +75,7 @@ class SubprocessRunner:
                 capture_output=True,
                 text=True,
                 input=input,
-                env=env,
+                env=full_env,
                 check=check,
             )
             return RunResult(
@@ -96,6 +101,7 @@ class SubprocessRunner:
         cwd: Path | None = None,
         check: bool = False,
         input: str | None = None,
+        env: dict[str, str] | None = None,
     ) -> RunResult:
         """Run a git subcommand.
 
@@ -104,9 +110,10 @@ class SubprocessRunner:
             cwd: Working directory (overrides instance default).
             check: If True, raises on non-zero exit.
             input: Optional stdin text.
+            env: Extra environment variables merged into the current environment.
         """
         git_bin = self._resolve_git_bin()
-        return self.run([git_bin, *args], cwd=cwd, check=check, input=input)
+        return self.run([git_bin, *args], cwd=cwd, check=check, input=input, env=env)
 
     def _resolve_git_bin(self) -> str:
         resolved = shutil.which(self._git_bin)
