@@ -98,6 +98,7 @@ class GitHubRepo:
     default_branch: str
     private: bool
     description: str = ""
+    topics: list[str] = field(default_factory=list)
 
 
 @dataclass

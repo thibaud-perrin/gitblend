@@ -27,6 +27,16 @@ class GitBlendBranchItem(bpy.types.PropertyGroup):
     upstream: bpy.props.StringProperty()  # type: ignore[valid-type]
 
 
+class GitBlendRepoItem(bpy.types.PropertyGroup):
+    """Represents one GitHub repo in the blender_repos CollectionProperty."""
+
+    name: bpy.props.StringProperty()  # type: ignore[valid-type]
+    full_name: bpy.props.StringProperty()  # type: ignore[valid-type]
+    description: bpy.props.StringProperty()  # type: ignore[valid-type]
+    clone_url: bpy.props.StringProperty()  # type: ignore[valid-type]
+    private: bpy.props.BoolProperty()  # type: ignore[valid-type]
+
+
 class GitBlendWindowProps(bpy.types.PropertyGroup):
     """Main gitblend state — registered on WindowManager."""
 
@@ -63,6 +73,17 @@ class GitBlendWindowProps(bpy.types.PropertyGroup):
     device_flow_code: bpy.props.StringProperty(name="Device Code", default="")  # type: ignore[valid-type]
     device_flow_uri: bpy.props.StringProperty(name="Verification URI", default="")  # type: ignore[valid-type]
     device_flow_device_code: bpy.props.StringProperty(name="Device Code (internal)", default="")  # type: ignore[valid-type]
+
+    # My Blender Projects
+    blender_repos: bpy.props.CollectionProperty(type=GitBlendRepoItem)  # type: ignore[valid-type]
+    blender_repos_index: bpy.props.IntProperty(default=0)  # type: ignore[valid-type]
+    blender_repos_loading: bpy.props.BoolProperty(default=False)  # type: ignore[valid-type]
+    clone_target_dir: bpy.props.StringProperty(  # type: ignore[valid-type]
+        name="Clone into",
+        description="Parent directory — repo will be cloned into a subfolder here",
+        subtype="DIR_PATH",
+        default="",
+    )
 
     # Diagnostics
     diag_has_gitignore: bpy.props.BoolProperty(default=False)  # type: ignore[valid-type]
@@ -110,6 +131,7 @@ class GitBlendPreferences(bpy.types.AddonPreferences):
 classes = [
     GitBlendCommitItem,
     GitBlendBranchItem,
+    GitBlendRepoItem,
     GitBlendWindowProps,
     GitBlendPreferences,
 ]

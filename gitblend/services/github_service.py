@@ -198,6 +198,18 @@ class GitHubService:
         except GitBlendError as e:
             return err(e)
 
+    def list_blender_repos(self, username: str) -> Result[list[GitHubRepo], GitBlendError]:
+        """Return repos owned by username that have the 'blender' topic."""
+        try:
+            data = self._request(
+                "GET",
+                f"/search/repositories?q=topic:blender+user:{username}&sort=updated&per_page=100",
+            )
+            items = data.get("items", []) if isinstance(data, dict) else []
+            return ok([self._parse_repo(r) for r in items])
+        except GitBlendError as e:
+            return err(e)
+
     # ------------------------------------------------------------------ #
     # Pull Requests                                                        #
     # ------------------------------------------------------------------ #
@@ -322,6 +334,7 @@ class GitHubService:
             default_branch=data.get("default_branch", "main"),
             private=data.get("private", True),
             description=data.get("description") or "",
+            topics=data.get("topics", []),
         )
 
     def _parse_pr(self, data: dict[str, Any]) -> PullRequest:

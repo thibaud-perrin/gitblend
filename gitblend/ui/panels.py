@@ -238,6 +238,55 @@ class GITBLEND_PT_diagnostics(bpy.types.Panel):
         layout.operator("gitblend.setup_lfs_blender", text="Setup LFS", icon="MOD_PARTICLE_INSTANCE")
 
 
+class GITBLEND_PT_blender_repos(bpy.types.Panel):
+    """My Blender Projects — browse and clone GitHub repos tagged 'blender'."""
+
+    bl_label = "My Blender Projects"
+    bl_idname = "GITBLEND_PT_blender_repos"
+    bl_space_type = _SPACE
+    bl_region_type = _REGION
+    bl_category = _CATEGORY
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context: bpy.types.Context) -> None:
+        layout = self.layout
+        props = context.window_manager.gitblend  # type: ignore[attr-defined]
+
+        if not props.github_authenticated:
+            layout.label(text="Connect to GitHub to see your Blender repos", icon="ERROR")
+            layout.operator("gitblend.auth_pat", text="Connect with Token", icon="KEY_HLT")
+            layout.operator("gitblend.start_device_flow", text="Connect via Browser", icon="URL")
+            return
+
+        row = layout.row(align=True)
+        if props.blender_repos_loading:
+            row.label(text="Loading...", icon="TIME")
+        else:
+            row.operator("gitblend.refresh_blender_repos", text="Refresh", icon="FILE_REFRESH")
+
+        if props.blender_repos:
+            layout.template_list(
+                "GITBLEND_UL_repos",
+                "",
+                props,
+                "blender_repos",
+                props,
+                "blender_repos_index",
+                rows=6,
+            )
+        else:
+            layout.label(text="No repos found. Click Refresh.", icon="INFO")
+
+        layout.separator()
+        layout.prop(props, "clone_target_dir")
+
+        has_selection = bool(props.blender_repos) and 0 <= props.blender_repos_index < len(props.blender_repos)
+        has_dir = bool(props.clone_target_dir.strip())
+        row = layout.row()
+        row.enabled = has_selection and has_dir
+        row.operator("gitblend.clone_repo", text="Clone Selected Repo", icon="IMPORT")
+
+
 classes = [
     GITBLEND_PT_main,
     GITBLEND_PT_status,
@@ -245,4 +294,5 @@ classes = [
     GITBLEND_PT_branches,
     GITBLEND_PT_github,
     GITBLEND_PT_diagnostics,
+    GITBLEND_PT_blender_repos,
 ]
