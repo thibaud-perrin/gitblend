@@ -1,0 +1,38 @@
+# gitblend — Blender project .gitignore
+
+# Blender autosave and backup files
+*.blend1
+*.blend2
+*.blend@*
+
+# gitblend safety backups
+.gitblend-backups/
+
+# Blender render output
+# Uncomment if you do NOT want to commit renders:
+# render/
+# output/
+
+# Python cache
+__pycache__/
+*.py[co]
+*.pyo
+
+# OS metadata
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editor temporaries
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Blender temp / crash files
+/tmp/
