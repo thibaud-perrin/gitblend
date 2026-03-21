@@ -12,6 +12,7 @@ from .operators import (
     history,
     lfs,
     project,
+    repos,
     restore,
     sync,
 )
@@ -30,6 +31,7 @@ _CLASSES: list[type] = [
     *sync.classes,
     *lfs.classes,
     *github.classes,
+    *repos.classes,
     *restore.classes,
     *diagnostics.classes,
     *lists.classes,

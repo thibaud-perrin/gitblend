@@ -36,9 +36,14 @@ uv run python tools/package_extension.py
 
 # Dev install into Blender
 uv run python tools/dev_install.py
+
+# Bump version (major/minor/patch)
+uv run python tools/bump_version.py [major|minor|patch]
+uv run python tools/bump_version.py patch --tag  # Also create git tag
 ```
 
 > Note: most of the above scripts don't exist yet and will need to be created as development progresses.
+> See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed developer workflows and command reference.
 
 ## Architecture
 

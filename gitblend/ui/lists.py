@@ -55,7 +55,38 @@ class GITBLEND_UL_branches(bpy.types.UIList):
             row.label(text=item.name, icon=icon_name)
 
 
+class GITBLEND_UL_repos(bpy.types.UIList):
+    """GitHub repo list for 'My Blender Projects'."""
+
+    bl_idname = "GITBLEND_UL_repos"
+
+    def draw_item(
+        self,
+        context: bpy.types.Context,
+        layout: bpy.types.UILayout,
+        data: bpy.types.AnyType,
+        item: bpy.types.AnyType,
+        icon: int,
+        active_data: bpy.types.AnyType,
+        active_propname: str,
+        index: int = 0,
+        flt_flag: int = 0,
+    ) -> None:
+        if self.layout_type in {"DEFAULT", "COMPACT"}:
+            row = layout.row(align=True)
+            row.label(
+                text=item.name,
+                icon="LOCKED" if item.private else "UNLOCKED",
+            )
+            if item.description:
+                row.label(text=item.description)
+        elif self.layout_type == "GRID":
+            layout.alignment = "CENTER"
+            layout.label(text=item.name)
+
+
 classes = [
     GITBLEND_UL_commits,
     GITBLEND_UL_branches,
+    GITBLEND_UL_repos,
 ]

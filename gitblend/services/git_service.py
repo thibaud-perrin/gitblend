@@ -47,6 +47,12 @@ class GitService:
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(path)
 
+    def clone(self, url: str, target_dir: Path) -> Result[Path, GitBlendError]:
+        result = self._runner.run_git(["clone", url, str(target_dir)])
+        if result.failed:
+            return err(GitCommandError(result.command, result.returncode, result.stderr))
+        return ok(target_dir)
+
     def is_repo(self, path: Path) -> bool:
         result = self._runner.run_git(
             ["rev-parse", "--is-inside-work-tree"],
