@@ -59,7 +59,9 @@ def register() -> None:
 
     # Restore session state on file load; also run once for the current file
     startup.register_handlers()
-    bpy.app.timers.register(startup._restore_state, first_interval=0.5)
+    # Only schedule if a file is already loaded — load_post covers future opens
+    if bpy.data.filepath:
+        bpy.app.timers.register(startup._restore_state, first_interval=0.5)
 
 
 def unregister() -> None:

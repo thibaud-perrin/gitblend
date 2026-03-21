@@ -7,6 +7,7 @@ import bpy
 from ..bpy_adapters import context as ctx_adapter
 from ..bpy_adapters import reports
 from ..domain.errors import NotBlenderProjectError
+from ..domain.models import BranchType
 from ..domain.result import is_ok
 
 from ._services import get_blender_project, get_git
@@ -160,9 +161,48 @@ class GITBLEND_OT_merge_branch(bpy.types.Operator):
         self.layout.prop(self, "branch_name")
 
 
+class GITBLEND_OT_refresh_branches(bpy.types.Operator):
+    bl_idname = "gitblend.refresh_branches"
+    bl_label = "Refresh Branches"
+    bl_description = "Reload the list of branches"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context: bpy.types.Context) -> set[str]:
+        blend_path = ctx_adapter.get_blend_path()
+        if blend_path is None:
+            return {"FINISHED"}
+
+        git = get_git()
+        project = get_blender_project()
+        repo = project.detect_project_root(blend_path)
+
+        result = git.list_branches(repo)
+        if not is_ok(result):
+            return {"FINISHED"}
+
+        branches = result.value  # type: ignore[union-attr]
+        props = context.window_manager.gitblend  # type: ignore[attr-defined]
+        props.branches.clear()
+        for branch in branches:
+            item = props.branches.add()
+            item.name = branch.name
+            item.is_current = branch.is_current
+            item.upstream = branch.upstream or ""
+            item.is_remote = branch.type == BranchType.REMOTE
+
+        # Select the current branch by default
+        for i, branch in enumerate(branches):
+            if branch.is_current:
+                props.branches_index = i
+                break
+
+        return {"FINISHED"}
+
+
 classes = [
     GITBLEND_OT_create_branch,
     GITBLEND_OT_switch_branch,
     GITBLEND_OT_delete_branch,
     GITBLEND_OT_merge_branch,
+    GITBLEND_OT_refresh_branches,
 ]

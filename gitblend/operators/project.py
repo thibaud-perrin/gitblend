@@ -55,11 +55,12 @@ class GITBLEND_OT_refresh_status(bpy.types.Operator):
             return {"FINISHED"}
 
         git = get_git()
-        project = get_blender_project()
-        repo_path = project.detect_project_root(blend_path)
 
-        if not git.is_repo(repo_path):
+        # Use git itself to find the repo root — more reliable than manual .git walk
+        repo_root_result = git.get_repo_root(blend_path.parent)
+        if not is_ok(repo_root_result):
             return {"FINISHED"}
+        repo_path = repo_root_result.value  # type: ignore[union-attr]
 
         result = git.status(repo_path)
         if not is_ok(result):
@@ -77,6 +78,11 @@ class GITBLEND_OT_refresh_status(bpy.types.Operator):
         props.ahead = status.ahead
         props.behind = status.behind
         props.sync_state = status.sync_state.name
+
+        try:
+            bpy.ops.gitblend.refresh_branches()
+        except Exception:
+            pass
 
         return {"FINISHED"}
 

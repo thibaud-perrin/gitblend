@@ -31,6 +31,7 @@ def _restore_state() -> None:
         def _refresh() -> None:
             try:
                 bpy.ops.gitblend.refresh_status()
+                bpy.ops.gitblend.refresh_branches()
             except Exception:
                 pass
             return None  # unregister timer

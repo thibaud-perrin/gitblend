@@ -33,6 +33,7 @@ class GITBLEND_PT_main(bpy.types.Panel):
             row.label(text=props.branch, icon=icon)
         else:
             row.label(text="Not a git repo", icon="ERROR")
+            row.operator("gitblend.refresh_status", text="", icon="FILE_REFRESH")
             row.operator("gitblend.init_repo", text="Init", icon="ADD")
             return
 
@@ -152,14 +153,44 @@ class GITBLEND_PT_branches(bpy.types.Panel):
 
     def draw(self, context: bpy.types.Context) -> None:
         layout = self.layout
+        props = context.window_manager.gitblend  # type: ignore[attr-defined]
 
+        row = layout.row()
+        row.operator("gitblend.refresh_branches", text="Refresh", icon="FILE_REFRESH")
+
+        if props.branches:
+            layout.template_list(
+                "GITBLEND_UL_branches",
+                "",
+                props,
+                "branches",
+                props,
+                "branches_index",
+                rows=4,
+            )
+            if 0 <= props.branches_index < len(props.branches):
+                selected = props.branches[props.branches_index]
+                is_detached = selected.name == "HEAD (detached)"
+                row = layout.row()
+                row.enabled = not selected.is_current and not is_detached
+                if not is_detached:
+                    if selected.is_remote:
+                        local_name = selected.name.split("/", 1)[1]
+                        label = f"Checkout '{local_name}' (from {selected.name})"
+                    else:
+                        local_name = selected.name
+                        label = f"Switch to '{selected.name}'"
+                    op = row.operator("gitblend.switch_branch", text=label, icon="BOOKMARKS")
+                    op.branch_name = local_name
+                else:
+                    row.label(text="HEAD (detached) — cannot switch")
+        else:
+            layout.label(text="Click Refresh to load branches.", icon="INFO")
+
+        layout.separator()
         row = layout.row(align=True)
         row.operator("gitblend.create_branch", text="New Branch", icon="ADD")
         row.operator("gitblend.merge_branch", text="Merge", icon="AUTOMERGE_ON")
-
-        layout.separator()
-        layout.label(text="Switch branch:")
-        layout.operator("gitblend.switch_branch", text="Switch…")
 
 
 class GITBLEND_PT_github(bpy.types.Panel):

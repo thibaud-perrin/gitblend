@@ -25,6 +25,7 @@ class GitBlendBranchItem(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty()  # type: ignore[valid-type]
     is_current: bpy.props.BoolProperty()  # type: ignore[valid-type]
     upstream: bpy.props.StringProperty()  # type: ignore[valid-type]
+    is_remote: bpy.props.BoolProperty()  # type: ignore[valid-type]
 
 
 class GitBlendRepoItem(bpy.types.PropertyGroup):

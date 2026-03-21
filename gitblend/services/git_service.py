@@ -9,6 +9,7 @@ from ..domain.errors import (
     BranchNotFoundError,
     GitBlendError,
     GitCommandError,
+    LFSNotAvailableError,
     MergeConflictError,
     RemoteNotFoundError,
     RepoNotInitializedError,
@@ -146,12 +147,16 @@ class GitService:
         str_paths = [str(p) for p in paths]
         result = self._runner.run_git(["add", "--", *str_paths], cwd=repo)
         if result.failed:
+            if "filter-process" in result.stderr or "git-lfs" in result.stderr:
+                return err(LFSNotAvailableError())
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)
 
     def stage_all(self, repo: Path) -> Result[None, GitBlendError]:
         result = self._runner.run_git(["add", "-A"], cwd=repo)
         if result.failed:
+            if "filter-process" in result.stderr or "git-lfs" in result.stderr:
+                return err(LFSNotAvailableError())
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)
 
