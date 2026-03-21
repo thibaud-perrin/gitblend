@@ -1,0 +1,10 @@
+schema_version = "1.0.0"
+id = "gitblend"
+version = "0.1.0"
+name = "gitblend"
+tagline = "Version your Blender projects like code, without leaving Blender."
+maintainer = "gitblend contributors"
+type = "add-on"
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+category = "Development"

@@ -1,0 +1,67 @@
+"""Centralised registration / unregistration of all Blender classes."""
+
+from __future__ import annotations
+
+import bpy
+
+from .operators import (
+    branch,
+    commit,
+    diagnostics,
+    github,
+    history,
+    lfs,
+    project,
+    restore,
+    sync,
+)
+from .properties import GitBlendWindowProps
+from .properties import classes as property_classes
+from .ui import dialogs, icons, lists, menus, panels
+
+# All classes that need register/unregister, in dependency order.
+# PropertyGroups first, then operators, then UI.
+_CLASSES: list[type] = [
+    *property_classes,
+    *project.classes,
+    *commit.classes,
+    *history.classes,
+    *branch.classes,
+    *sync.classes,
+    *lfs.classes,
+    *github.classes,
+    *restore.classes,
+    *diagnostics.classes,
+    *lists.classes,
+    *panels.classes,
+    *menus.classes,
+    *dialogs.classes,
+]
+
+
+def register() -> None:
+    for cls in _CLASSES:
+        bpy.utils.register_class(cls)
+
+    # Register window-manager property group
+    bpy.types.WindowManager.gitblend = bpy.props.PointerProperty(  # type: ignore[attr-defined]
+        type=GitBlendWindowProps
+    )
+
+    # Add File menu item
+    menus.register_menus()
+
+    # Load custom icons
+    icons.register_icons()
+
+
+def unregister() -> None:
+    icons.unregister_icons()
+    menus.unregister_menus()
+
+    # Remove window-manager property group
+    if hasattr(bpy.types.WindowManager, "gitblend"):
+        del bpy.types.WindowManager.gitblend  # type: ignore[attr-defined]
+
+    for cls in reversed(_CLASSES):
+        bpy.utils.unregister_class(cls)

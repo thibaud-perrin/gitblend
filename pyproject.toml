@@ -1,7 +1,50 @@
 [project]
 name = "gitblend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Git and GitHub workflows for Blender projects."
 readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.12"
 dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "pytest>=8.2.0",
+    "pytest-cov>=5.0.0",
+    "pre-commit>=3.7.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["gitblend", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["SIM108"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["gitblend"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["tests/", "tools/"]
+
+[[tool.mypy.overrides]]
+module = "bpy"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "bpy.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=gitblend --cov-report=term-missing"
+markers = [
+    "unit: pure logic tests, no bpy, no subprocess",
+    "integration: git tests with real temp repos",
+]
