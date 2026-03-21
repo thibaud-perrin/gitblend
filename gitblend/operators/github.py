@@ -11,7 +11,7 @@ from ..bpy_adapters import jobs, reports
 from ..domain.errors import NotBlenderProjectError
 from ..domain.result import is_ok
 
-from ._services import get_blender_project, get_git, get_github
+from ._services import get_auth, get_blender_project, get_git, get_github
 
 _device_flow_pending: bool = False
 
@@ -158,6 +158,8 @@ class GITBLEND_OT_poll_device_flow(bpy.types.Operator):
             username = user_result.value if is_ok(user_result) else ""  # type: ignore[union-attr]
             props.github_username = username
             props.github_authenticated = True
+            if username:
+                get_auth().save_meta("github.com", "username", username)
             self.report({"INFO"}, f"Connected to GitHub as {username}.")
         else:
             self.report({"WARNING"}, "Not authorized yet. Try again in a moment.")

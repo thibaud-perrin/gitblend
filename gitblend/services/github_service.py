@@ -51,6 +51,7 @@ class GitHubService:
             return err(AuthError("Token is valid but no username returned."))
         try:
             self._auth.save_token(_GITHUB_HOST, token)
+            self._auth.save_meta(_GITHUB_HOST, "username", username)
         except Exception as e:
             return err(AuthError(f"Token valid but could not save credentials: {e}"))
         return ok(username)

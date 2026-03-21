@@ -16,6 +16,7 @@ from .operators import (
     restore,
     sync,
 )
+from .bpy_adapters import startup
 from .properties import GitBlendWindowProps
 from .properties import classes as property_classes
 from .ui import dialogs, icons, lists, menus, panels
@@ -56,8 +57,13 @@ def register() -> None:
     # Load custom icons
     icons.register_icons()
 
+    # Restore session state on file load; also run once for the current file
+    startup.register_handlers()
+    bpy.app.timers.register(startup._restore_state, first_interval=0.5)
+
 
 def unregister() -> None:
+    startup.unregister_handlers()
     icons.unregister_icons()
     menus.unregister_menus()
 

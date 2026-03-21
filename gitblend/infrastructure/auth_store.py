@@ -178,6 +178,21 @@ class AuthStore:
         )
 
     # ------------------------------------------------------------------ #
+    # Metadata (username, etc.)                                           #
+    # ------------------------------------------------------------------ #
+
+    def save_meta(self, host: str, key: str, value: str) -> None:
+        """Persist arbitrary metadata (e.g. username) alongside stored credentials."""
+        data = self._fallback_read_all()
+        data[f"{host}:meta:{key}"] = value
+        self.FALLBACK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self.FALLBACK_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+    def load_meta(self, host: str, key: str) -> str | None:
+        """Return a previously saved metadata value, or None."""
+        return self._fallback_read_all().get(f"{host}:meta:{key}")
+
+    # ------------------------------------------------------------------ #
     # Plaintext fallback                                                   #
     # ------------------------------------------------------------------ #
 

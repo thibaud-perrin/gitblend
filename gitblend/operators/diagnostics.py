@@ -9,7 +9,7 @@ from ..bpy_adapters import reports
 from ..domain.errors import NotBlenderProjectError
 from ..domain.result import is_ok
 
-from ._services import get_blender_project, get_diagnostics
+from ._services import get_blender_project, get_diagnostics, get_lfs
 
 
 class GITBLEND_OT_audit_project(bpy.types.Operator):
@@ -101,11 +101,15 @@ class GITBLEND_OT_setup_lfs_blender(bpy.types.Operator):
     bl_description = "Install git-lfs and configure it for all Blender binary types"
 
     def execute(self, context: bpy.types.Context) -> set[str]:
-        bpy.ops.gitblend.setup_lfs()
+        if "CANCELLED" in bpy.ops.gitblend.setup_lfs():
+            return {"CANCELLED"}
         bpy.ops.gitblend.write_gitattributes()
         return {"FINISHED"}
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
+        if not get_lfs().is_lfs_available():
+            self.report({"ERROR"}, "git-lfs is not installed. Install it from https://git-lfs.com/")
+            return {"CANCELLED"}
         return context.window_manager.invoke_confirm(
             self,
             event,
