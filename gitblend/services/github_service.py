@@ -49,7 +49,10 @@ class GitHubService:
         username = data.get("login", "")
         if not username:
             return err(AuthError("Token is valid but no username returned."))
-        self._auth.save_token(_GITHUB_HOST, token)
+        try:
+            self._auth.save_token(_GITHUB_HOST, token)
+        except Exception as e:
+            return err(AuthError(f"Token valid but could not save credentials: {e}"))
         return ok(username)
 
     def start_device_flow(self) -> Result[DeviceFlowData, GitBlendError]:
@@ -131,7 +134,10 @@ class GitHubService:
 
             if "access_token" in data:
                 token = data["access_token"]
-                self._auth.save_token(_GITHUB_HOST, token)
+                try:
+                    self._auth.save_token(_GITHUB_HOST, token)
+                except Exception as e:
+                    return err(AuthError(f"Authorized but could not save credentials: {e}"))
                 return ok(token)
 
             error_code = data.get("error", "")

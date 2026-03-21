@@ -70,18 +70,21 @@ class AuthStore:
     # ------------------------------------------------------------------ #
 
     def _mac_save(self, host: str, token: str) -> None:
-        # Delete first to avoid duplicate errors
-        self._mac_delete(host)
-        subprocess.run(
-            [
-                "security", "add-generic-password",
-                "-s", self.KEYCHAIN_SERVICE,
-                "-a", host,
-                "-w", token,
-            ],
-            check=True,
-            capture_output=True,
-        )
+        try:
+            # Delete first to avoid duplicate errors
+            self._mac_delete(host)
+            subprocess.run(
+                [
+                    "security", "add-generic-password",
+                    "-s", self.KEYCHAIN_SERVICE,
+                    "-a", host,
+                    "-w", token,
+                ],
+                check=True,
+                capture_output=True,
+            )
+        except Exception:
+            self._fallback_save(host, token)
 
     def _mac_load(self, host: str) -> str | None:
         result = subprocess.run(
@@ -114,11 +117,14 @@ class AuthStore:
 
     def _win_save(self, host: str, token: str) -> None:
         target = f"{self.KEYCHAIN_SERVICE}/{host}"
-        subprocess.run(
-            ["cmdkey", f"/add:{target}", f"/user:{host}", f"/pass:{token}"],
-            check=True,
-            capture_output=True,
-        )
+        try:
+            subprocess.run(
+                ["cmdkey", f"/add:{target}", f"/user:{host}", f"/pass:{token}"],
+                check=True,
+                capture_output=True,
+            )
+        except Exception:
+            self._fallback_save(host, token)
 
     def _win_load(self, host: str) -> str | None:
         try:
@@ -133,7 +139,7 @@ class AuthStore:
             )
             token = result.stdout.strip()
             return token if token else self._fallback_load(host)
-        except FileNotFoundError:
+        except Exception:
             return self._fallback_load(host)
 
     def _win_delete(self, host: str) -> None:
