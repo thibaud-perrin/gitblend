@@ -11,7 +11,7 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Union
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -32,7 +32,7 @@ class Err(Generic[E]):
 
 
 # Union type alias — use as Result[ValueType, ErrorType]
-type Result[T, E] = Ok[T] | Err[E]
+Result = Union[Ok[T], Err[E]]
 
 
 def ok(value: T) -> Ok[T]:
