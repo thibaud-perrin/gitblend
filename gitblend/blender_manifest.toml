@@ -1,6 +1,6 @@
 schema_version = "1.0.0"
 id = "gitblend"
-version = "0.2.3"
+version = "0.2.4"
 name = "gitblend"
 tagline = "Version your Blender projects like code, without leaving Blender."
 maintainer = "gitblend contributors"
