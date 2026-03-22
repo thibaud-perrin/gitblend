@@ -14,6 +14,7 @@ from .operators import (
     project,
     repos,
     restore,
+    stash,
     sync,
 )
 from .bpy_adapters import startup
@@ -35,6 +36,7 @@ _CLASSES: list[type] = [
     *repos.classes,
     *restore.classes,
     *diagnostics.classes,
+    *stash.classes,
     *lists.classes,
     *panels.classes,
     *menus.classes,

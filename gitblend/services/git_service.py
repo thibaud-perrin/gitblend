@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
 from ..domain.enums import ErrorKind, SyncState
 from ..domain.errors import (
     BranchNotFoundError,
+    DirtyWorkingTreeError,
     GitBlendError,
     GitCommandError,
     LFSNotAvailableError,
     MergeConflictError,
     RemoteNotFoundError,
     RepoNotInitializedError,
+    StashConflictError,
 )
-from ..domain.models import Branch, CommitInfo, GitRemote, RepoStatus
+from ..domain.models import Branch, CommitInfo, GitRemote, RepoStatus, StashEntry
 from ..domain.result import Err, Result, err, ok
 from ..infrastructure.file_system import FileSystem
 from ..infrastructure.parser_git_log import (
@@ -24,8 +27,25 @@ from ..infrastructure.parser_git_log import (
     parse_log,
     parse_remote_list,
 )
+from ..infrastructure.parser_git_stash import parse_stash_list
 from ..infrastructure.parser_git_status import parse_porcelain_v1, split_by_area
 from ..infrastructure.subprocess_runner import SubprocessRunner
+
+
+def _parse_overwritten_files(stderr: str) -> list[str]:
+    """Extract file names from git's 'would be overwritten by merge' error."""
+    files: list[str] = []
+    in_list = False
+    for line in stderr.splitlines():
+        if "would be overwritten" in line:
+            in_list = True
+        elif in_list:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("Please") and not stripped.startswith("Aborting"):
+                files.append(stripped)
+            else:
+                break
+    return files
 
 
 class GitService:
@@ -381,11 +401,21 @@ class GitService:
         remote: str = "origin",
         branch: str | None = None,
     ) -> Result[None, GitBlendError]:
-        args = ["pull", remote]
+        # --no-rebase forces merge mode, bypassing git rebase's strict "unstaged changes"
+        # check which always fires for LFS-normalised files after stashing.
+        # --no-autostash prevents git's rebase.autostash from creating a secondary stash.
+        args = ["pull", "--no-rebase", "--no-autostash", remote]
         if branch:
             args.append(branch)
         result = self._runner.run_git(args, cwd=repo)
         if result.failed:
+            if "cannot pull with rebase" in result.stderr or (
+                "unstaged changes" in result.stderr and "rebase" in result.stderr
+            ):
+                return err(DirtyWorkingTreeError())
+            if "would be overwritten" in result.stderr:
+                files = _parse_overwritten_files(result.stderr)
+                return err(DirtyWorkingTreeError(files))
             if "CONFLICT" in result.stdout:
                 return err(MergeConflictError())
             if "filter-process" in result.stderr or "git-lfs" in result.stderr:
@@ -474,6 +504,79 @@ class GitService:
 
     def push_tags(self, repo: Path, remote: str = "origin") -> Result[None, GitBlendError]:
         result = self._runner.run_git(["push", remote, "--tags"], cwd=repo)
+        if result.failed:
+            return err(GitCommandError(result.command, result.returncode, result.stderr))
+        return ok(None)
+
+    # ------------------------------------------------------------------ #
+    # Stash                                                                #
+    # ------------------------------------------------------------------ #
+
+    def stash_save(self, repo: Path, message: str = "") -> Result[None, GitBlendError]:
+        """Stash current changes (``git stash push``).
+
+        Two LFS-related problems are suppressed here:
+
+        1. **Filter normalisation** — ``filter.lfs.process`` is pointed at a path that
+           is guaranteed not to exist (a file inside the temp directory that is never
+           created). Git tries to exec it, gets ENOENT, prints a non-fatal warning to
+           stderr, and falls through to the legacy ``smudge``/``clean`` filters (both
+           set to ``cat``). This is intentional: an empty string falls back to the
+           global gitconfig value (``git-lfs``), and a real executable such as
+           ``/usr/bin/false`` causes git to spawn it as a gitfilter2 IPC process which
+           exits without completing the pkt-line handshake — git then reports
+           "the remote end hung up unexpectedly" (exit 128), even with
+           ``filter.lfs.required=false``.
+
+        2. **Post-checkout hook** — after the stash commits are created, git runs an
+           internal ``reset --hard HEAD`` which triggers the git-lfs ``post-checkout``
+           hook. That hook attempts to fetch LFS objects from the remote server.
+           Pointing ``core.hooksPath`` at an empty temporary directory prevents any
+           hooks from running for the duration of the stash call. The temp directory
+           is created and cleaned up automatically by ``tempfile.TemporaryDirectory``.
+
+        Stash entries are local-only, so storing raw binaries instead of LFS pointers
+        is safe.
+        """
+        with tempfile.TemporaryDirectory() as empty_hooks:
+            lfs_noop = Path(empty_hooks) / "noop"  # path exists syntactically, file never created
+            lfs_bypass = [
+                "-c", "filter.lfs.required=false",
+                "-c", f"filter.lfs.process={lfs_noop}",  # ENOENT → soft fallback to smudge/clean
+                "-c", "filter.lfs.smudge=cat",
+                "-c", "filter.lfs.clean=cat",
+                "-c", f"core.hooksPath={empty_hooks}",
+            ]
+            args = lfs_bypass + ["stash", "push"]
+            if message:
+                args += ["-m", message]
+            result = self._runner.run_git(args, cwd=repo)
+        if result.failed:
+            return err(GitCommandError(result.command, result.returncode, result.stderr))
+        return ok(None)
+
+    def stash_list(self, repo: Path) -> Result[list[StashEntry], GitBlendError]:
+        """List all stash entries."""
+        result = self._runner.run_git(
+            ["stash", "list", "--format=%gd\x1f%gs\x1f%ci"],
+            cwd=repo,
+        )
+        if result.failed:
+            return err(GitCommandError(result.command, result.returncode, result.stderr))
+        return ok(parse_stash_list(result.stdout))
+
+    def stash_pop(self, repo: Path, ref: str = "stash@{0}") -> Result[None, GitBlendError]:
+        """Apply and remove a stash entry."""
+        result = self._runner.run_git(["stash", "pop", ref], cwd=repo)
+        if result.failed:
+            if "CONFLICT" in result.stdout or "conflict" in result.stderr.lower():
+                return err(StashConflictError())
+            return err(GitCommandError(result.command, result.returncode, result.stderr))
+        return ok(None)
+
+    def stash_drop(self, repo: Path, ref: str = "stash@{0}") -> Result[None, GitBlendError]:
+        """Delete a stash entry without applying it."""
+        result = self._runner.run_git(["stash", "drop", ref], cwd=repo)
         if result.failed:
             return err(GitCommandError(result.command, result.returncode, result.stderr))
         return ok(None)

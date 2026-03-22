@@ -44,12 +44,15 @@ class RepoNotInitializedError(GitBlendError):
 
 
 class DirtyWorkingTreeError(GitBlendError):
-    def __init__(self) -> None:
+    def __init__(self, files: list[str] | None = None) -> None:
+        detail = ("Modified files: " + ", ".join(files)) if files else ""
         super().__init__(
             message="Working tree has uncommitted changes.",
-            kind=ErrorKind.REPO,
-            suggestion="Commit or stash your changes before proceeding.",
+            kind=ErrorKind.USER,
+            detail=detail,
+            suggestion="Use the Stash panel to save your changes, then try again.",
         )
+
 
 
 class DetachedHeadError(GitBlendError):
@@ -159,4 +162,14 @@ class BranchNotFoundError(GitBlendError):
         super().__init__(
             message=f"Branch '{branch}' does not exist.",
             kind=ErrorKind.REPO,
+        )
+
+
+class StashConflictError(GitBlendError):
+    def __init__(self) -> None:
+        super().__init__(
+            message="Stash conflict when restoring changes.",
+            kind=ErrorKind.REPO,
+            detail="Applying the stash caused conflicts that must be resolved manually.",
+            suggestion="Resolve the conflicts, then run 'git stash drop' to clean up.",
         )

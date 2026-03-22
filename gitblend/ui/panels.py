@@ -94,6 +94,51 @@ class GITBLEND_PT_status(bpy.types.Panel):
         layout.operator("gitblend.commit", text="Commit", icon="FILE_TICK")
 
 
+class GITBLEND_PT_stash(bpy.types.Panel):
+    """Stash sub-panel — save and restore work in progress."""
+
+    bl_label = "Stash"
+    bl_idname = "GITBLEND_PT_stash"
+    bl_space_type = _SPACE
+    bl_region_type = _REGION
+    bl_category = _CATEGORY
+    bl_parent_id = "GITBLEND_PT_main"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context: bpy.types.Context) -> None:
+        layout = self.layout
+        props = context.window_manager.gitblend  # type: ignore[attr-defined]
+
+        # Save row
+        row = layout.row(align=True)
+        row.prop(props, "stash_message", text="", placeholder="Description (optional)")
+        row.operator("gitblend.stash_save", text="Save Changes", icon="RECOVER_LAST")
+        layout.operator("gitblend.stash_pull", text="Save & Pull", icon="TRIA_DOWN")
+
+        # Stash list
+        if props.stashes:
+            layout.template_list(
+                "GITBLEND_UL_stashes",
+                "",
+                props,
+                "stashes",
+                props,
+                "stashes_index",
+                rows=3,
+            )
+            if 0 <= props.stashes_index < len(props.stashes):
+                selected = props.stashes[props.stashes_index]
+                row = layout.row(align=True)
+                pop_op = row.operator("gitblend.stash_pop", text="Restore", icon="LOOP_BACK")
+                pop_op.stash_ref = selected.ref
+                drop_op = row.operator("gitblend.stash_drop", text="Discard", icon="TRASH")
+                drop_op.stash_ref = selected.ref
+        else:
+            layout.label(text="No saved changes.", icon="INFO")
+
+        layout.operator("gitblend.refresh_stash", text="Refresh", icon="FILE_REFRESH")
+
+
 class GITBLEND_PT_history(bpy.types.Panel):
     """Commit history sub-panel."""
 
@@ -321,6 +366,7 @@ class GITBLEND_PT_blender_repos(bpy.types.Panel):
 classes = [
     GITBLEND_PT_main,
     GITBLEND_PT_status,
+    GITBLEND_PT_stash,
     GITBLEND_PT_history,
     GITBLEND_PT_branches,
     GITBLEND_PT_github,
