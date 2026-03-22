@@ -65,6 +65,17 @@ class RepoStatus:
         return bool(self.conflicts)
 
 
+@dataclass(frozen=True)
+class StashEntry:
+    """A git stash entry."""
+
+    ref: str      # "stash@{0}"
+    index: int    # 0
+    branch: str   # "main"
+    message: str  # "WIP on main: abc1234 Last commit"
+    date: str     # "2026-03-22 10:30"
+
+
 @dataclass
 class GitRemote:
     """A git remote."""

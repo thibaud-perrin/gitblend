@@ -28,6 +28,15 @@ class GitBlendBranchItem(bpy.types.PropertyGroup):
     is_remote: bpy.props.BoolProperty()  # type: ignore[valid-type]
 
 
+class GitBlendStashItem(bpy.types.PropertyGroup):
+    """Represents one stash entry in the stashes CollectionProperty."""
+
+    ref: bpy.props.StringProperty()     # type: ignore[valid-type]  # "stash@{0}"
+    branch: bpy.props.StringProperty()  # type: ignore[valid-type]
+    message: bpy.props.StringProperty()  # type: ignore[valid-type]
+    date: bpy.props.StringProperty()    # type: ignore[valid-type]
+
+
 class GitBlendRepoItem(bpy.types.PropertyGroup):
     """Represents one GitHub repo in the blender_repos CollectionProperty."""
 
@@ -64,6 +73,15 @@ class GitBlendWindowProps(bpy.types.PropertyGroup):
     # Branches
     branches: bpy.props.CollectionProperty(type=GitBlendBranchItem)  # type: ignore[valid-type]
     branches_index: bpy.props.IntProperty(name="Branches Index", default=0)  # type: ignore[valid-type]
+
+    # Stash
+    stashes: bpy.props.CollectionProperty(type=GitBlendStashItem)  # type: ignore[valid-type]
+    stashes_index: bpy.props.IntProperty(name="Stash Index", default=0)  # type: ignore[valid-type]
+    stash_message: bpy.props.StringProperty(  # type: ignore[valid-type]
+        name="Stash Message",
+        description="Optional description for this saved state",
+        default="",
+    )
 
     # GitHub
     github_authenticated: bpy.props.BoolProperty(name="GitHub Authenticated", default=False)  # type: ignore[valid-type]
@@ -132,6 +150,7 @@ class GitBlendPreferences(bpy.types.AddonPreferences):
 classes = [
     GitBlendCommitItem,
     GitBlendBranchItem,
+    GitBlendStashItem,
     GitBlendRepoItem,
     GitBlendWindowProps,
     GitBlendPreferences,

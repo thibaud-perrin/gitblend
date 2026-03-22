@@ -1,9 +1,11 @@
 # gitblend — Blender project .gitignore
 
-# Blender autosave and backup files
-*.blend1
-*.blend2
-*.blend@*
+# Working blend files (gitblend sidecar workflow)
+# Only *.git.blend files are versioned — *.blend is Blender's live working copy.
+*.blend
+!*.git.blend
+*.blend[0-9]
+*.blend[0-9][0-9]
 
 # gitblend safety backups
 .gitblend-backups/

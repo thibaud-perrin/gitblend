@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from ..domain.models import BlenderProjectInfo, RepoStatus
@@ -96,3 +97,28 @@ class BlenderProjectService:
         if blend_path is None or str(blend_path) == "":
             return False
         return self._fs.exists(blend_path)
+
+    def get_sidecar_path(self, blend_path: Path) -> Path:
+        """Return the git-tracked sidecar path for a working .blend file.
+
+        Convention: ``project.blend`` (gitignored) ↔ ``project.git.blend`` (LFS-tracked).
+        """
+        return blend_path.with_name(blend_path.stem + ".git.blend")
+
+    def sync_blend_to_sidecar(self, blend_path: Path) -> None:
+        """Copy the working .blend to the git-tracked sidecar.
+
+        Called before commit or stash so the sidecar reflects the current
+        Blender state.
+        """
+        shutil.copy2(blend_path, self.get_sidecar_path(blend_path))
+
+    def sync_sidecar_to_blend(self, blend_path: Path) -> None:
+        """Copy the git-tracked sidecar back to the working .blend.
+
+        Called after pull, checkout, or stash pop so Blender can reload the
+        updated file.  No-op if the sidecar does not exist yet.
+        """
+        sidecar = self.get_sidecar_path(blend_path)
+        if sidecar.exists():
+            shutil.copy2(sidecar, blend_path)

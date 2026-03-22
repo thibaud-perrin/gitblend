@@ -85,8 +85,37 @@ class GITBLEND_UL_repos(bpy.types.UIList):
             layout.label(text=item.name)
 
 
+class GITBLEND_UL_stashes(bpy.types.UIList):
+    """Stash list."""
+
+    bl_idname = "GITBLEND_UL_stashes"
+
+    def draw_item(
+        self,
+        context: bpy.types.Context,
+        layout: bpy.types.UILayout,
+        data: bpy.types.AnyType,
+        item: bpy.types.AnyType,
+        icon: int,
+        active_data: bpy.types.AnyType,
+        active_propname: str,
+        index: int = 0,
+        flt_flag: int = 0,
+    ) -> None:
+        if self.layout_type in {"DEFAULT", "COMPACT"}:
+            row = layout.row(align=True)
+            row.label(text=f"[{index}]", icon="RECOVER_LAST")
+            msg = item.message
+            row.label(text=msg[:42] + ("…" if len(msg) > 42 else ""))
+            row.label(text=item.date)
+        elif self.layout_type == "GRID":
+            layout.alignment = "CENTER"
+            layout.label(text=f"[{index}]")
+
+
 classes = [
     GITBLEND_UL_commits,
     GITBLEND_UL_branches,
+    GITBLEND_UL_stashes,
     GITBLEND_UL_repos,
 ]

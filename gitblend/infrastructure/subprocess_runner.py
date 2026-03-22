@@ -136,7 +136,10 @@ class SubprocessRunner:
         return self.run([git_bin, *args], cwd=cwd, check=check, input=input, env=env)
 
     def _resolve_git_bin(self) -> str:
-        resolved = shutil.which(self._git_bin)
+        # Prefer git found via the augmented PATH (e.g. Homebrew on macOS) so that
+        # the resolved binary has the same git-lfs integration as the child env.
+        augmented_path = _augmented_env().get("PATH", "")
+        resolved = shutil.which(self._git_bin, path=augmented_path) or shutil.which(self._git_bin)
         if resolved is None:
             raise GitBinaryNotFoundError(self._git_bin)
         return resolved

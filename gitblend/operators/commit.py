@@ -82,11 +82,14 @@ class GITBLEND_OT_commit(bpy.types.Operator):
         project = get_blender_project()
         repo = project.detect_project_root(blend_path)
 
-        # Auto-save if preferred
+        # Save Blender's in-memory state then sync the sidecar so the commit
+        # captures the current scene content.
         prefs = context.preferences.addons.get("gitblend")
         if prefs and getattr(prefs.preferences, "auto_save_before_commit", True):
             if ctx_adapter.is_saved():
                 ctx_adapter.save_blend()
+        if blend_path.exists():
+            project.sync_blend_to_sidecar(blend_path)
 
         result = git.commit(repo, message)
         if is_ok(result):

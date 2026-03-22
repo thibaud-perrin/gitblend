@@ -50,6 +50,9 @@ class GITBLEND_OT_checkout_ref(bpy.types.Operator):
             self.report({"INFO"}, f"Checked out {self.ref}.")
             bpy.ops.gitblend.refresh_status()
             bpy.ops.gitblend.refresh_history()
+            # Sync the checked-out sidecar to the working .blend then reload.
+            project.sync_sidecar_to_blend(blend_path)
+            bpy.ops.wm.revert_mainfile()
         else:
             reports.report_error(self, result.error)  # type: ignore[union-attr]
             return {"CANCELLED"}

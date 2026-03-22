@@ -67,6 +67,9 @@ class GITBLEND_OT_pull(bpy.types.Operator):
             self.report({"INFO"}, "Pull complete.")
             bpy.ops.gitblend.refresh_status()
             bpy.ops.gitblend.refresh_history()
+            # Sync the pulled sidecar to the working .blend then reload.
+            project.sync_sidecar_to_blend(blend_path)
+            bpy.ops.wm.revert_mainfile()
         else:
             reports.report_error(self, result.error)  # type: ignore[union-attr]
             return {"CANCELLED"}
