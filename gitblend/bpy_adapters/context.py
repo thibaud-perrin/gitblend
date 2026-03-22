@@ -9,10 +9,10 @@ import bpy
 
 def get_blend_path() -> Path | None:
     """Return the absolute path of the currently open .blend file, or None."""
-    filepath = bpy.data.filepath
+    filepath = getattr(bpy.data, "filepath", None)
     if not filepath:
         return None
-    return Path(filepath).resolve()
+    return Path(filepath)  # Blender provides absolute paths; avoid resolve() symlink issues on macOS
 
 
 def get_blend_dir() -> Path | None:
@@ -23,17 +23,17 @@ def get_blend_dir() -> Path | None:
 
 def is_saved() -> bool:
     """Return True if the current .blend file has been saved to disk."""
-    return bool(bpy.data.filepath)
+    return bool(getattr(bpy.data, "filepath", None))
 
 
 def is_modified() -> bool:
     """Return True if the file has unsaved modifications."""
-    return bpy.data.is_dirty
+    return bool(getattr(bpy.data, "is_dirty", False))
 
 
 def save_blend() -> None:
     """Save the current .blend file (no-op if not yet saved to disk)."""
-    if bpy.data.filepath:
+    if getattr(bpy.data, "filepath", None):
         bpy.ops.wm.save_mainfile()
 
 

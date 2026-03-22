@@ -54,14 +54,10 @@ class GITBLEND_OT_refresh_status(bpy.types.Operator):
         if blend_path is None:
             return {"FINISHED"}
 
+        project = get_blender_project()
         git = get_git()
 
-        # Use git itself to find the repo root — more reliable than manual .git walk
-        repo_root_result = git.get_repo_root(blend_path.parent)
-        if not is_ok(repo_root_result):
-            return {"FINISHED"}
-        repo_path = repo_root_result.value  # type: ignore[union-attr]
-
+        repo_path = project.detect_project_root(blend_path)
         result = git.status(repo_path)
         if not is_ok(result):
             return {"FINISHED"}

@@ -7,12 +7,33 @@ subprocess usage to one place and makes testing easy via dependency injection.
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..domain.errors import GitBinaryNotFoundError
+
+
+def _augmented_env() -> dict[str, str]:
+    """Return os.environ with Homebrew and common tool paths prepended.
+
+    Blender on macOS strips the shell PATH, so git-lfs and similar tools
+    installed via Homebrew are not findable by child processes spawned by git.
+    """
+    env = os.environ.copy()
+    if platform.system() == "Darwin":
+        extra = [
+            "/opt/homebrew/bin",   # Apple Silicon Homebrew
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",      # Intel Homebrew / MacPorts
+            "/usr/local/sbin",
+        ]
+        current = env.get("PATH", "")
+        existing = [p for p in current.split(":") if p not in extra]
+        env["PATH"] = ":".join(extra + existing)
+    return env
 
 
 @dataclass
@@ -64,9 +85,8 @@ class SubprocessRunner:
             env: Environment variables (merged with current env if None).
         """
         working_dir = cwd or self._cwd
-        full_env: dict[str, str] | None = None
+        full_env = _augmented_env()
         if env is not None:
-            full_env = os.environ.copy()
             full_env.update(env)
         try:
             proc = subprocess.run(
