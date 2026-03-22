@@ -22,7 +22,7 @@ class GITBLEND_PT_main(bpy.types.Panel):
         layout = self.layout
         props = context.window_manager.gitblend  # type: ignore[attr-defined]
 
-        if not bpy.data.filepath:
+        if not getattr(bpy.data, "filepath", None):
             layout.label(text="Open and save a .blend file", icon="ERROR")
             return
 

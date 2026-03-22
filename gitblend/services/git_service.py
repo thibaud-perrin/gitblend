@@ -102,6 +102,20 @@ class GitService:
             cwd=repo,
         )
         if status_result.failed:
+            if "filter-process" in status_result.stderr or "git-lfs" in status_result.stderr:
+                # LFS not installed but required=true in gitconfig — repo IS valid,
+                # we just can't enumerate dirty files. Return branch-only status.
+                return ok(RepoStatus(
+                    branch=branch,
+                    sync_state=SyncState.NO_REMOTE,
+                    staged=[],
+                    unstaged=[],
+                    untracked=[],
+                    conflicts=[],
+                    is_detached=is_detached,
+                    ahead=0,
+                    behind=0,
+                ))
             return err(RepoNotInitializedError(str(repo)))
 
         files = parse_porcelain_v1(status_result.stdout)
@@ -350,6 +364,8 @@ class GitService:
     def fetch(self, repo: Path, remote: str = "origin") -> Result[None, GitBlendError]:
         result = self._runner.run_git(["fetch", remote], cwd=repo)
         if result.failed:
+            if "filter-process" in result.stderr or "git-lfs" in result.stderr:
+                return err(LFSNotAvailableError())
             if "Could not resolve host" in result.stderr or "Connection refused" in result.stderr:
                 from ..domain.errors import NetworkError
                 return err(NetworkError(result.stderr))
@@ -372,6 +388,8 @@ class GitService:
         if result.failed:
             if "CONFLICT" in result.stdout:
                 return err(MergeConflictError())
+            if "filter-process" in result.stderr or "git-lfs" in result.stderr:
+                return err(LFSNotAvailableError())
             if "Could not resolve host" in result.stderr:
                 from ..domain.errors import NetworkError
                 return err(NetworkError(result.stderr))
@@ -395,6 +413,8 @@ class GitService:
         if result.failed:
             if "has no upstream" in result.stderr or "no upstream" in result.stderr.lower():
                 return err(RemoteNotFoundError(remote))
+            if "filter-process" in result.stderr or "git-lfs" in result.stderr:
+                return err(LFSNotAvailableError())
             if "rejected" in result.stderr:
                 return err(GitCommandError(result.command, result.returncode, result.stderr))
             if "Could not resolve host" in result.stderr:

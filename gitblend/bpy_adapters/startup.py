@@ -12,6 +12,13 @@ def _on_load_post(*_args: object) -> None:
 
 def _restore_state() -> None:
     """Restore GitHub auth state and trigger git status refresh."""
+    try:
+        _do_restore_state()
+    except Exception:
+        pass
+
+
+def _do_restore_state() -> None:
     from ..infrastructure.auth_store import AuthStore
 
     # Restore GitHub credentials from stored token
@@ -27,7 +34,7 @@ def _restore_state() -> None:
         pass
 
     # Auto-refresh git status if a blend file is already open
-    if bpy.data.filepath:
+    if getattr(bpy.data, "filepath", None):
         def _refresh() -> None:
             try:
                 bpy.ops.gitblend.refresh_status()

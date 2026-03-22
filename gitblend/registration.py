@@ -44,7 +44,11 @@ _CLASSES: list[type] = [
 
 def register() -> None:
     for cls in _CLASSES:
-        bpy.utils.register_class(cls)
+        try:
+            bpy.utils.register_class(cls)
+        except ValueError:
+            bpy.utils.unregister_class(cls)
+            bpy.utils.register_class(cls)
 
     # Register window-manager property group
     bpy.types.WindowManager.gitblend = bpy.props.PointerProperty(  # type: ignore[attr-defined]
@@ -60,7 +64,7 @@ def register() -> None:
     # Restore session state on file load; also run once for the current file
     startup.register_handlers()
     # Only schedule if a file is already loaded — load_post covers future opens
-    if bpy.data.filepath:
+    if getattr(bpy.data, "filepath", None):
         bpy.app.timers.register(startup._restore_state, first_interval=0.5)
 
 
@@ -74,4 +78,7 @@ def unregister() -> None:
         del bpy.types.WindowManager.gitblend  # type: ignore[attr-defined]
 
     for cls in reversed(_CLASSES):
-        bpy.utils.unregister_class(cls)
+        try:
+            bpy.utils.unregister_class(cls)
+        except RuntimeError:
+            pass
